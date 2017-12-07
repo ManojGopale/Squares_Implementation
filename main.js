@@ -381,6 +381,10 @@ d3.csv("s_1000.csv", function (error, data) {
 // -------------------------------------
 function mouseClick (d,i) {
 	console.log("mouseCLick data = " + this.className + ", Correct= " + d.Correct);
+
+	// When we hover after histogram is plotted we need to enable whiteBground
+	d3.selectAll("tr").classed("whiteBground", true);
+
 	//d3.select(this).classed("whiteBground", true);
 	d3.select(this).attr("class", "rowSelected")
 		.attr("bgcolor", function(d) {
@@ -545,13 +549,20 @@ function chartClickRed (d){
 	console.log("d in chartClick= " + d3.mouse(this) );
 
 	d3.selectAll(".wierdLines").remove();
-	d3.selectAll(".highlight").classed("highlight", false);
+	//d3.selectAll(".highlight").classed("highlight", false);
+	d3.selectAll("tr").classed("whiteBground", true);
 
 	var rowClass = ".row_C" + d.class.slice(-1);
 	var rowLevel = d.level.slice(-1);
 	var row_id = rowClass + "_" + rowLevel + "_0";
-	d3.selectAll(row_id).classed("highlight", "true");
-	d3.selectAll(".highlight").moveToBack();
+	//d3.selectAll(row_id).classed("highlight", "true");
+	//d3.selectAll(".highlight").moveToBack();
+
+	// Need to make the whiteBground flase for the selected classes first
+	d3.selectAll(row_id).classed("whiteBground", false)
+		.attr("bgcolor", "#b15928");
+	d3.selectAll(row_id).moveToBack();
+		
 
 	// Create fp lines
 	d3.select("#svgPlot")
@@ -575,7 +586,7 @@ function chartClickGreen (d){
 	d3.selectAll(".wierdLines").remove();
 	//d3.selectAll(".highlight").classed("highlight", false);
 	// make all the rows in table as white
-	d3.selectAll(".histHighlight").classed("whiteBground", true);
+	d3.selectAll("tr").classed("whiteBground", true);
 
 	var rowClass = ".row_C" + d.class.slice(-1);
 	var rowLevel = d.level.slice(-1);
@@ -584,7 +595,7 @@ function chartClickGreen (d){
 	//d3.selectAll(".highlight").moveToBack();
 
 	// Need to make the whiteBground flase for the selected classes first
-	d3.selectAll(row_id).attr("class", "histHighlight").classed("whiteBground", false)
+	d3.selectAll(row_id).classed("whiteBground", false)
 		.attr("bgcolor", function(d) {
 			if(d.Correct === '1') {
 				var colorScale = d3.scaleQuantize().domain([0,9]).range(['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a'])
@@ -593,7 +604,7 @@ function chartClickGreen (d){
 				return "#b15928";
 			}
 		});
-	d3.selectAll(".histHighlight").moveToBack();
+	d3.selectAll(row_id).moveToBack();
 		
 
 	// Create tp lines
