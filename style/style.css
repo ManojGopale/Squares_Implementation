@@ -1,0 +1,36 @@
+table {
+	border: 1px solid black;
+	border-collapse: collapse;
+	border-spacing: 5px;
+}
+
+th, td {
+	font-family: Tahoma;
+	font-size: 15px;
+	border: 1px solid black;
+	border-collapse: collapse;
+	padding: 5px;
+	text-align: center;
+}
+
+tr.highlight {
+	background-color: #ffff99;
+}
+
+tr.whiteBground {
+	background-color: white;
+}
+
+circle {
+	fill-opacity: 0.7;
+}
+
+circle.hidden {
+	fill: #ccc;
+}
+
+.extent {
+	fill: #000;
+	fill-opacity: 0.125;
+	stroke: #fff;
+}
