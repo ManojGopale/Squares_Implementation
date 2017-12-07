@@ -232,7 +232,9 @@ d3.csv("s_5000.csv", function (error, data) {
 									.enter()
 									.append('tr')
 									.attr("class", rowClass)
-									.attr("id", "tableRow");
+									.attr("id", "tableRow")
+									.on("mouseover", mouseClick)
+									.on("mouseout", mouseOut);
 	
 	var cells = rows.selectAll('td')
 		.data(function (row) {
@@ -246,9 +248,9 @@ d3.csv("s_5000.csv", function (error, data) {
 
 	// ----------------------------------------
 
-	d3.selectAll("#tableRow")
-		.on("mouseover", mouseClick)
-		.on("mouseout", mouseOut);
+//	d3.selectAll("#tableRow")
+//		.on("mouseover", mouseClick)
+//		.on("mouseout", mouseOut);
 		//.on("mousedown", mouseClick);
 
 	// ASsigning class to rows for linking C9_7_1 => Class9, level7, true positive
@@ -307,7 +309,7 @@ d3.csv("s_5000.csv", function (error, data) {
 			var xScale = d3.scaleLinear().domain([0, maxCount]).range([0, widthFactor*width]);
 			return xScale(d.fpCount);
 		})
-		.attr("fill", "red")
+		.attr("fill", "#b15928")
 		.on("mouseover", chartClickRed);
 		//.on("mouseout", chartClickOut);
 
@@ -335,7 +337,12 @@ d3.csv("s_5000.csv", function (error, data) {
 			var xScale = d3.scaleLinear().domain([0, maxCount]).range([0, widthFactor*width]);
 			return xScale(d.tpCount);
 		})
-		.attr("fill", "green")
+		.attr("fill", function(d) {
+			var colorScale = d3.scaleQuantize().domain([0,9]).range(['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a'])
+			return colorScale(d.class.slice(-1));
+		})
+		.attr("stroke", "white")
+		.attr("stroke-width", "1")
 		.on("mouseover", chartClickGreen);
 		//.on("mouseout", chartClickOut);
 	console.log("THIS IS OUR ARRAY:", lst);
@@ -373,8 +380,21 @@ d3.csv("s_5000.csv", function (error, data) {
 
 // -------------------------------------
 function mouseClick (d,i) {
-	console.log("mouseCLick data = " + this.className);
-	d3.select(this).classed("highlight", true);
+	console.log("mouseCLick data = " + this.className + ", Correct= " + d.Correct);
+
+	// When we hover after histogram is plotted we need to enable whiteBground
+	d3.selectAll("tr").classed("whiteBground", true);
+
+	//d3.select(this).classed("whiteBground", true);
+	d3.select(this).attr("class", "rowSelected")
+		.attr("bgcolor", function(d) {
+			if(d.Correct === '1') {
+				var colorScale = d3.scaleQuantize().domain([0,9]).range(['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a'])
+				return colorScale(d.Assigned_Class);
+			} else if (d.Correct === '0') {
+				return "#b15928";
+			}
+		});
 
 	d3.select("#svgPlot")
 		.selectAll("empty")
@@ -387,7 +407,14 @@ function mouseClick (d,i) {
 		.attr("class", "newLine")
 		.attr("d", createLine)
 		.attr("fill", "none")
-		.attr("stroke", "blue")
+		.attr("stroke", function(d) {
+			if(d.Correct === '1') {
+				var colorScale = d3.scaleQuantize().domain([0,9]).range(['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a'])
+				return colorScale(d.Assigned_Class);
+			} else if (d.Correct === '0') {
+				return "#b15928";
+			}
+		})
 		.attr("stroke_width", 3);
 }
 
@@ -432,7 +459,7 @@ function mouseOut() {
 	d3.selectAll(".wierdLines").remove();
 
 	// removes the previously highlighted row in the table
-	d3.selectAll(".highlight").classed("highlight", false);
+	d3.selectAll(".rowSelected").classed("whiteBground", true);
 		//.attr("stroke", "grey")
 }
 
@@ -522,13 +549,20 @@ function chartClickRed (d){
 	console.log("d in chartClick= " + d3.mouse(this) );
 
 	d3.selectAll(".wierdLines").remove();
-	d3.selectAll(".highlight").classed("highlight", false);
+	//d3.selectAll(".highlight").classed("highlight", false);
+	d3.selectAll("tr").classed("whiteBground", true);
 
 	var rowClass = ".row_C" + d.class.slice(-1);
 	var rowLevel = d.level.slice(-1);
 	var row_id = rowClass + "_" + rowLevel + "_0";
-	d3.selectAll(row_id).classed("highlight", "true");
-	d3.selectAll(".highlight").moveToBack();
+	//d3.selectAll(row_id).classed("highlight", "true");
+	//d3.selectAll(".highlight").moveToBack();
+
+	// Need to make the whiteBground flase for the selected classes first
+	d3.selectAll(row_id).classed("whiteBground", false)
+		.attr("bgcolor", "#b15928");
+	d3.selectAll(row_id).moveToBack();
+		
 
 	// Create fp lines
 	d3.select("#svgPlot")
@@ -538,7 +572,7 @@ function chartClickRed (d){
 		.append("path")
 		.attr("class", "wierdLines")
 		.attr("d", createLine)
-		.attr("stroke", "black")
+		.attr("stroke", "#b15928")
 		.attr("fill", "none")
 		.attr("stroke_width", "5");
 }
@@ -548,14 +582,30 @@ function chartClickGreen (d){
 	//console.log("this= " + this);
 	//console.log("d in chartClick= " + d3.mouse(this) );
 
+	// remove lines from previous selection
 	d3.selectAll(".wierdLines").remove();
-	d3.selectAll(".highlight").classed("highlight", false);
+	//d3.selectAll(".highlight").classed("highlight", false);
+	// make all the rows in table as white
+	d3.selectAll("tr").classed("whiteBground", true);
 
 	var rowClass = ".row_C" + d.class.slice(-1);
 	var rowLevel = d.level.slice(-1);
 	var row_id = rowClass + "_" + rowLevel + "_1";
-	d3.selectAll(row_id).classed("highlight", true);
-	d3.selectAll(".highlight").moveToBack();
+	//d3.selectAll(row_id).classed("highlight", true);
+	//d3.selectAll(".highlight").moveToBack();
+
+	// Need to make the whiteBground flase for the selected classes first
+	d3.selectAll(row_id).classed("whiteBground", false)
+		.attr("bgcolor", function(d) {
+			if(d.Correct === '1') {
+				var colorScale = d3.scaleQuantize().domain([0,9]).range(['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a'])
+				return colorScale(d.Assigned_Class);
+			} else if (d.Correct === '0') {
+				return "#b15928";
+			}
+		});
+	d3.selectAll(row_id).moveToBack();
+		
 
 	// Create tp lines
 	d3.select("#svgPlot")
@@ -565,7 +615,10 @@ function chartClickGreen (d){
 		.append("path")
 		.attr("class", "wierdLines")
 		.attr("d", createLine)
-		.attr("stroke", "black")
+		.attr("stroke", function(d) {
+			var colorScale = d3.scaleQuantize().domain([0,9]).range(['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a']);
+			return colorScale(d.Assigned_Class);
+		})
 		.attr("fill", "none")
 		.attr("stroke_width", "5");
 }
